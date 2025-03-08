@@ -2,25 +2,15 @@
 
 declare(strict_types=1);
 
-function a1_Strings_Trim(array $a1_S, int $length = 70): array
+function curl_multi_exec_All(array $a1_URLs, int $i_TimeOut = 10): array
 {
     /**
-     * обрезать строки массива 1-мерного
+     * curl_multi_exec многочисленных запросов
      */
 
-    return array_map(fn($string) => mb_substr(
-        $string,
-        0,
-        $length,
-        'UTF-8'
-    ), $a1_S);
-}
-
-function curl_multi_exec_All(array $a1_URLs, int $i_TimeOut): array
-{
     $multiHandle = curl_multi_init();
-    $handles = [];
-    $responses = [];
+    $handles     = [];
+    $responses   = [];
 
     // Инициализация отдельных cURL-дескрипторов для каждого URL
     foreach ($a1_URLs as $url) {
@@ -54,7 +44,7 @@ function curl_multi_exec_All(array $a1_URLs, int $i_TimeOut): array
 function curl_multi_exec_All_Test(): void
 {
 
-    $timeout = 55;
+    $timeout = 5;
 
     // Пример использования
     $urls = [
@@ -91,4 +81,72 @@ function curl_multi_exec_All_Test(): void
             echo "Ошибка: " . $urls[$index] . "\n";
         }
     }
+}
+
+function a1_Strings_Trim(array $a1_S, int $length = 70): array
+{
+    /**
+     * обрезать строки массива 1-мерного
+     */
+
+    return array_map(fn($string) => mb_substr(
+        $string,
+        0,
+        $length,
+        'UTF-8'
+    ), $a1_S);
+}
+
+function curl_multi_exec_All_Good_Bad(array $a1_URLs, array $a1_Responses): array
+{
+    /**
+     * дихотомирует ссылки в массивы "хорошие" и "плохие"
+     */
+
+    $goodUrls = [];
+    $badUrls  = [];
+
+    // Проходим по всем ссылкам и ответам
+    foreach ($a1_URLs as $index => $url) {
+        $response = $a1_Responses[$index] ?? null;
+
+        // Проверяем, является ли ответ "хорошим"
+        if ($response !== false && !empty($response)) {
+            $goodUrls[] = $url;
+        } else {
+            $badUrls[] = $url;
+        }
+    }
+
+    return [
+        'good' => $goodUrls,
+        'bad'  => $badUrls
+    ];
+}
+
+function curl_multi_exec_All_Good_Bad_Test(): void
+{
+
+    $a1_Good_Wanted =  [
+        'https://example.com',
+        'https://example.org',
+        'https://example.net',
+        'https://example.edu',
+    ];
+
+    $a1_Bad_Wanted = ['https://example.gov'];
+
+    $a1_URLs = array_merge($a1_Bad_Wanted, $a1_Good_Wanted);
+
+    $a1_Responses = curl_multi_exec_All($a1_URLs);
+
+    $a1 = curl_multi_exec_All_Good_Bad($a1_URLs, $a1_Responses);
+
+    $a1_Bad  = $a1['bad'];
+    $a1_Good = $a1['good'];
+
+    assert($a1_Bad === $a1_Bad_Wanted);
+    assert($a1_Good === $a1_Good_Wanted);
+
+    echo __FUNCTION__ . " пройден\n";
 }
